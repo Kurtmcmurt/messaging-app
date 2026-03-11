@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-messaging}
+      POSTGRES_USER: ${POSTGRES_USER:-messaging}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-messaging}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-messaging} -d ${POSTGRES_DB:-messaging}"]
+      interval: 2s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    entrypoint: ["/app/entrypoint.sh"]
+    command: ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-messaging}:${POSTGRES_PASSWORD:-messaging}@db:5432/${POSTGRES_DB:-messaging}
+      POSTGRES_USER: ${POSTGRES_USER:-messaging}
+      POSTGRES_DB: ${POSTGRES_DB:-messaging}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-messaging}
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      DEBUG: ${DEBUG:-false}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

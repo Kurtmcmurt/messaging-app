@@ -1,0 +1,56 @@
+[
+  {
+    "pk": 1,
+    "model": "core.customerrecipient",
+    "fields": {
+      "customer": 8,
+      "prisoner": 5,
+      "created_at": "2024-01-16T10:00:00Z"
+    }
+  },
+  {
+    "pk": 2,
+    "model": "core.customerrecipient",
+    "fields": {
+      "customer": 8,
+      "prisoner": 6,
+      "created_at": "2024-01-16T10:00:00Z"
+    }
+  },
+  {
+    "pk": 3,
+    "model": "core.customerrecipient",
+    "fields": {
+      "customer": 9,
+      "prisoner": 5,
+      "created_at": "2024-01-16T10:00:00Z"
+    }
+  },
+  {
+    "pk": 4,
+    "model": "core.customerrecipient",
+    "fields": {
+      "customer": 10,
+      "prisoner": 6,
+      "created_at": "2024-01-16T10:00:00Z"
+    }
+  },
+  {
+    "pk": 5,
+    "model": "core.customerrecipient",
+    "fields": {
+      "customer": 10,
+      "prisoner": 7,
+      "created_at": "2024-01-16T10:00:00Z"
+    }
+  },
+  {
+    "pk": 6,
+    "model": "core.customerrecipient",
+    "fields": {
+      "customer": 11,
+      "prisoner": 7,
+      "created_at": "2024-01-16T10:00:00Z"
+    }
+  }
+]
