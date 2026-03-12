@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Home – Messaging{% endblock %}
+{% block content %}
+<section>
+  <h1>Welcome</h1>
+  <p>Secure messaging between families and their loved ones. Sign in to send messages or to review them if you are staff.</p>
+  {% if not user.is_authenticated %}
+  <p><a href="{% url 'login' %}" role="button">Sign in</a></p>
+  {% endif %}
+</section>
+{% endblock %}

@@ -81,7 +81,8 @@
       "is_staff": false,
       "is_active": true,
       "date_joined": "2024-01-15T09:00:00Z",
-      "role": "PRISONER"
+      "role": "PRISONER",
+      "prisoner_number": "AB1234"
     }
   },
   {
@@ -98,7 +99,8 @@
       "is_staff": false,
       "is_active": true,
       "date_joined": "2024-01-15T09:00:00Z",
-      "role": "PRISONER"
+      "role": "PRISONER",
+      "prisoner_number": "CD5678"
     }
   },
   {
@@ -115,7 +117,8 @@
       "is_staff": false,
       "is_active": true,
       "date_joined": "2024-01-15T09:00:00Z",
-      "role": "PRISONER"
+      "role": "PRISONER",
+      "prisoner_number": "EF9012"
     }
   },
   {

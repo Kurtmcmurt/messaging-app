@@ -1,0 +1,90 @@
+/* Mobile-first layout and navigation */
+
+/* Nav: on mobile, brand + collapsible menu; on desktop, brand + inline links */
+.site-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--pico-spacing);
+}
+
+.site-nav__brand {
+  flex-shrink: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.site-nav__brand li {
+  margin: 0;
+}
+
+/* Desktop links: hidden on mobile */
+.site-nav__links--desktop {
+  display: none;
+}
+
+/* Mobile menu (details/summary) */
+.site-nav__menu--mobile {
+  flex-shrink: 0;
+}
+
+.site-nav__menu--mobile summary {
+  cursor: pointer;
+  list-style: none;
+  padding: var(--pico-form-element-spacing-vertical) var(--pico-form-element-spacing-horizontal);
+}
+
+.site-nav__menu--mobile summary::-webkit-details-marker {
+  display: none;
+}
+
+.site-nav__menu--mobile[open] summary {
+  margin-bottom: var(--pico-spacing);
+}
+
+.site-nav__menu--mobile .site-nav__links {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 12rem;
+}
+
+.site-nav__menu--mobile .site-nav__links li {
+  margin: 0;
+  border-bottom: 1px solid var(--pico-muted-border-color);
+}
+
+.site-nav__menu--mobile .site-nav__links li:last-child {
+  border-bottom: none;
+}
+
+.site-nav__menu--mobile .site-nav__links a {
+  display: block;
+  padding: var(--pico-form-element-spacing-vertical) 0;
+}
+
+/* Desktop: show inline links, hide mobile menu */
+@media (min-width: 768px) {
+  .site-nav__menu--mobile {
+    display: none;
+  }
+
+  .site-nav__links--desktop {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--pico-spacing);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .site-nav__links--desktop li {
+    margin: 0;
+  }
+}

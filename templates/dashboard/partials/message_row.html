@@ -1,0 +1,22 @@
+<tr id="message-row-{{ message.pk }}">
+  <td>{{ message.thread.customer.username }}</td>
+  <td>{{ message.thread.prisoner.username }}</td>
+  <td>{{ message.sender.username }}</td>
+  <td>{{ message.receiver.username }}</td>
+  <td>{{ message.body|truncatewords:15 }}</td>
+  <td>{{ message.created_at|date:"SHORT_DATETIME_FORMAT" }}</td>
+  <td>
+    {% if message.inspected_at %}
+      Yes ({{ message.inspected_by.username }})
+    {% else %}
+      <form method="post" action="{% url 'dashboard:message_inspect' message.pk %}"
+            hx-post="{% url 'dashboard:message_inspect' message.pk %}"
+            hx-target="#message-row-{{ message.pk }}"
+            hx-swap="outerHTML"
+            class="inline">
+        {% csrf_token %}
+        <button type="submit" class="secondary">Mark inspected</button>
+      </form>
+    {% endif %}
+  </td>
+</tr>

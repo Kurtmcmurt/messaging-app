@@ -1,6 +1,14 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 from django.db import models
+
+# UK MoJ / NOMIS-style: 2 letters + 4 digits (e.g. AB1234) or 1 letter + 4 digits + 2 letters (e.g. A1417AE)
+prisoner_number_validator = RegexValidator(
+    r"^([A-Z]{2}[0-9]{4}|[A-Z][0-9]{4}[A-Z]{2})$",
+    message="Enter a valid UK prisoner number (e.g. AB1234 or A1417AE).",
+    code="invalid_prisoner_number",
+)
 
 
 class Role(models.TextChoices):
@@ -17,6 +25,23 @@ class User(AbstractUser):
         choices=Role.choices,
         default=Role.CUSTOMER,
     )
+    prisoner_number = models.CharField(
+        max_length=10,
+        unique=True,
+        null=True,
+        blank=True,
+        validators=[prisoner_number_validator],
+        help_text="UK MoJ-style prisoner number (e.g. AB1234 or A1417AE). Only for prisoners.",
+    )
+
+    def clean(self):
+        super().clean()
+        if self.prisoner_number:
+            self.prisoner_number = self.prisoner_number.strip().upper()
+            if self.role != Role.PRISONER:
+                raise ValidationError(
+                    {"prisoner_number": "Prisoner number is only for users with role Prisoner."}
+                )
 
 
 class CustomerRecipient(models.Model):

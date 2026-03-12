@@ -1,0 +1,9 @@
+{% for msg in messages %}
+<article>
+  <header>
+    <strong>{{ msg.sender.get_full_name|default:msg.sender.username }}</strong>
+    <small>{{ msg.created_at|date:"SHORT_DATETIME_FORMAT" }}</small>
+  </header>
+  <p>{{ msg.body }}</p>
+</article>
+{% endfor %}

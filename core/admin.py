@@ -8,11 +8,17 @@ from .models import Role
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ("username", "email", "role", "is_staff", "is_active")
+    list_display = ("username", "email", "role", "prisoner_number", "is_staff", "is_active")
     list_filter = ("role", "is_staff", "is_active")
     ordering = ("username",)
-    fieldsets = BaseUserAdmin.fieldsets + (("Role", {"fields": ("role",)}),)
-    add_fieldsets = BaseUserAdmin.add_fieldsets + (("Role", {"fields": ("role",)}),)
+    fieldsets = BaseUserAdmin.fieldsets + (
+        ("Role", {"fields": ("role",)}),
+        ("Prisoner", {"fields": ("prisoner_number",), "description": "Prisoner number (UK MoJ format). Only for prisoners."}),
+    )
+    add_fieldsets = BaseUserAdmin.add_fieldsets + (
+        ("Role", {"fields": ("role",)}),
+        ("Prisoner", {"fields": ("prisoner_number",)}),
+    )
 
 
 @admin.register(CustomerRecipient)

@@ -1,0 +1,46 @@
+<nav class="site-nav" aria-label="Main">
+  <ul class="site-nav__brand">
+    <li><strong><a href="{% url 'home' %}">Messaging</a></strong></li>
+  </ul>
+  {% comment %}Mobile: collapsible menu{% endcomment %}
+  <details class="site-nav__menu site-nav__menu--mobile" id="nav-menu">
+    <summary aria-haspopup="listbox">Menu</summary>
+    <ul class="site-nav__links">
+      <li><a href="{% url 'home' %}">Home</a></li>
+      <li><a href="{% url 'about' %}">About</a></li>
+      {% if user.is_authenticated %}
+        {% if user.role == 'OFFICER' or user.role == 'ADMIN' or user.role == 'SUPER_ADMIN' %}
+          <li><a href="{% url 'dashboard:vetting' %}">Vetting</a></li>
+        {% endif %}
+        {% if user.role == 'CUSTOMER' or user.role == 'PRISONER' %}
+          <li><a href="{% url 'dashboard:messages' %}">Messages</a></li>
+        {% endif %}
+        {% if user.role == 'CUSTOMER' %}
+          <li><a href="{% url 'dashboard:add_recipient' %}">Add recipient</a></li>
+        {% endif %}
+        <li><a href="{% url 'logout' %}">Logout</a></li>
+      {% else %}
+        <li><a href="{% url 'login' %}">Login</a></li>
+      {% endif %}
+    </ul>
+  </details>
+  {% comment %}Desktop: inline links (hidden on mobile){% endcomment %}
+  <ul class="site-nav__links site-nav__links--desktop">
+    <li><a href="{% url 'home' %}">Home</a></li>
+    <li><a href="{% url 'about' %}">About</a></li>
+    {% if user.is_authenticated %}
+      {% if user.role == 'OFFICER' or user.role == 'ADMIN' or user.role == 'SUPER_ADMIN' %}
+        <li><a href="{% url 'dashboard:vetting' %}">Vetting</a></li>
+      {% endif %}
+      {% if user.role == 'CUSTOMER' or user.role == 'PRISONER' %}
+        <li><a href="{% url 'dashboard:messages' %}">Messages</a></li>
+      {% endif %}
+      {% if user.role == 'CUSTOMER' %}
+        <li><a href="{% url 'dashboard:add_recipient' %}">Add recipient</a></li>
+      {% endif %}
+      <li><a href="{% url 'logout' %}">Logout</a></li>
+    {% else %}
+      <li><a href="{% url 'login' %}">Login</a></li>
+    {% endif %}
+  </ul>
+</nav>

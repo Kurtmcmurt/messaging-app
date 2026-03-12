@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Vetting – Messaging{% endblock %}
+{% block content %}
+<article>
+  <header>
+    <h1>Message vetting</h1>
+    <p>
+      <a href="?uninspected=1" role="button" class="secondary">Uninspected only</a>
+      <a href="{% url 'dashboard:vetting' %}" role="button" class="secondary">All</a>
+    </p>
+  </header>
+  {% if message_list %}
+  <figure>
+    <table role="grid">
+      <thead>
+        <tr>
+          <th>Customer</th>
+          <th>Prisoner</th>
+          <th>From</th>
+          <th>To</th>
+          <th>Body</th>
+          <th>Date</th>
+          <th>Inspected</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for message in message_list %}
+          {% include "dashboard/partials/message_row.html" with message=message %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </figure>
+  {% else %}
+  <p>No messages to show.</p>
+  {% endif %}
+</article>
+{% endblock %}
