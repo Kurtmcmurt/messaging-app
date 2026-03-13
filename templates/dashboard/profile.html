@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Profile – Messaging{% endblock %}
+{% block content %}
+<article>
+  <header>
+    <h1>Profile</h1>
+  </header>
+
+  <form method="post" action="{% url 'dashboard:profile' %}">
+    {% csrf_token %}
+
+    <table role="grid" style="width: 100%; max-width: 32rem;">
+      <tr>
+        <th scope="row" style="width: 10rem;">Username</th>
+        <td>{{ user.username }}</td>
+      </tr>
+      <tr>
+        <th scope="row">First name</th>
+        <td>
+          {% if user.role == 'PRISONER' %}
+            {{ user.first_name|default:"—" }}
+          {% else %}
+            <input type="text" name="first_name" value="{{ user.first_name|default:'' }}" maxlength="150" />
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th scope="row">Last name</th>
+        <td>
+          {% if user.role == 'PRISONER' %}
+            {{ user.last_name|default:"—" }}
+          {% else %}
+            <input type="text" name="last_name" value="{{ user.last_name|default:'' }}" maxlength="150" />
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th scope="row">Email</th>
+        <td>
+          {% if user.role == 'PRISONER' %}
+            {{ user.email|default:"—" }}
+          {% else %}
+            <input type="email" name="email" value="{{ user.email|default:'' }}" maxlength="254" />
+          {% endif %}
+        </td>
+      </tr>
+      <tr>
+        <th scope="row">Role</th>
+        <td>{{ user.get_role_display }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Prison</th>
+        <td>
+          {% if user.role == 'CUSTOMER' %}
+            <select name="prison" {% if not user.prison_id %}required{% endif %}>
+              <option value="">— Select a prison —</option>
+              {% for p in prisons %}
+                <option value="{{ p.id }}" {% if user.prison_id == p.id %}selected{% endif %}>{{ p.name }} ({{ p.code }})</option>
+              {% endfor %}
+            </select>
+            <small>You can only message prisoners at this prison. Changing prison hides conversations from other prisons until you switch back.</small>
+          {% else %}
+            {% if user.prison %}{{ user.prison.name }} ({{ user.prison.code }}){% else %}—{% endif %}
+          {% endif %}
+        </td>
+      </tr>
+      {% if user.role == 'PRISONER' and user.prisoner_number %}
+      <tr>
+        <th scope="row">Prisoner number</th>
+        <td>{{ user.prisoner_number }}</td>
+      </tr>
+      {% endif %}
+      <tr>
+        <th scope="row">Date joined</th>
+        <td>{{ user.date_joined|date:"SHORT_DATETIME_FORMAT" }}</td>
+      </tr>
+      <tr>
+        <th scope="row">Last login</th>
+        <td>{% if user.last_login %}{{ user.last_login|date:"SHORT_DATETIME_FORMAT" }}{% else %}—{% endif %}</td>
+      </tr>
+    </table>
+
+    {% if user.role != 'PRISONER' %}
+      <p style="margin-top: 1rem;">
+        <button type="submit">Save changes</button>
+      </p>
+    {% endif %}
+  </form>
+
+  {% if user.prison %}
+    <p><a href="{% url 'dashboard:messages' %}">← Back to conversations</a></p>
+  {% else %}
+    <p><a href="{% url 'home' %}">← Back to home</a></p>
+  {% endif %}
+</article>
+{% endblock %}

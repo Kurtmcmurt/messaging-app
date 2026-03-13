@@ -1,9 +1,16 @@
 {% for msg in messages %}
-<article>
-  <header>
-    <strong>{{ msg.sender.get_full_name|default:msg.sender.username }}</strong>
-    <small>{{ msg.created_at|date:"SHORT_DATETIME_FORMAT" }}</small>
-  </header>
-  <p>{{ msg.body }}</p>
-</article>
+<div class="message-bubble-wrapper message-bubble-wrapper--{% if user == msg.sender %}sent{% else %}received{% endif %}">
+  <div class="message-bubble message-bubble--{% if user == msg.sender %}sent{% else %}received{% endif %}">
+    <div class="message-bubble__header">
+      <strong class="message-bubble__sender">{{ msg.sender.get_full_name|default:msg.sender.username }}</strong>
+      <time class="message-bubble__time" datetime="{{ msg.created_at|date:'c' }}">{{ msg.created_at|date:"SHORT_DATETIME_FORMAT" }}</time>
+      {% if user == msg.sender %}
+      <span class="message-bubble__read-status" aria-label="Read status">
+        {% if msg.read_at %}<span title="Read {{ msg.read_at|date:'SHORT_DATETIME_FORMAT' }}">✓✓ Read</span>{% else %}<span title="Sent">✓ Sent</span>{% endif %}
+      </span>
+      {% endif %}
+    </div>
+    <p class="message-bubble__body">{{ msg.body }}</p>
+  </div>
+</div>
 {% endfor %}

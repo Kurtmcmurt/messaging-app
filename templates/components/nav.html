@@ -9,6 +9,7 @@
       <li><a href="{% url 'home' %}">Home</a></li>
       <li><a href="{% url 'about' %}">About</a></li>
       {% if user.is_authenticated %}
+        <li><a href="{% url 'dashboard:profile' %}">Profile</a></li>
         {% if user.role == 'OFFICER' or user.role == 'ADMIN' or user.role == 'SUPER_ADMIN' %}
           <li><a href="{% url 'dashboard:vetting' %}">Vetting</a></li>
         {% endif %}
@@ -29,6 +30,7 @@
     <li><a href="{% url 'home' %}">Home</a></li>
     <li><a href="{% url 'about' %}">About</a></li>
     {% if user.is_authenticated %}
+      <li><a href="{% url 'dashboard:profile' %}">Profile</a></li>
       {% if user.role == 'OFFICER' or user.role == 'ADMIN' or user.role == 'SUPER_ADMIN' %}
         <li><a href="{% url 'dashboard:vetting' %}">Vetting</a></li>
       {% endif %}

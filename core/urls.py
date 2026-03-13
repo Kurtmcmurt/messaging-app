@@ -6,6 +6,7 @@ app_name = "dashboard"
 
 urlpatterns = [
     path("", views.dashboard_redirect, name="index"),
+    path("profile/", views.profile, name="profile"),
     path("vetting/", views.vetting_list, name="vetting"),
     path("vetting/message/<int:pk>/inspect/", views.message_inspect, name="message_inspect"),
     path("messages/", views.thread_list, name="messages"),

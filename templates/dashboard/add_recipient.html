@@ -4,7 +4,7 @@
 <article>
   <header>
     <h1>Add a recipient</h1>
-    <p>Enter the prisoner number (UK MoJ format, e.g. AB1234 or A1417AE) to add them as a recipient you can message.</p>
+    <p>Enter the prisoner number (UK MoJ format, e.g. AB1234 or A1417AE) to add them as a recipient. Search is limited to prisoners at <strong>{{ user.prison.name }}</strong>.</p>
   </header>
   {% if error %}
   <p><mark>{{ error }}</mark></p>

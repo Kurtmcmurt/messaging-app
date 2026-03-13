@@ -33,3 +33,15 @@ def messaging_dashboard_required(view_func):
         return view_func(request, *args, **kwargs)
 
     return wrapper
+
+
+def customer_prison_required(view_func):
+    """Redirect CUSTOMER to profile if they have not selected a prison."""
+
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        if request.user.role == Role.CUSTOMER and not request.user.prison_id:
+            return redirect("dashboard:profile")
+        return view_func(request, *args, **kwargs)
+
+    return wrapper

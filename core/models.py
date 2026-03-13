@@ -11,6 +11,19 @@ prisoner_number_validator = RegexValidator(
 )
 
 
+class Prison(models.Model):
+    """A prison establishment. Users and content are scoped by prison."""
+
+    name = models.CharField(max_length=255)
+    code = models.CharField(max_length=20, unique=True, help_text="Short code (e.g. BXI, WDI)")
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return f"{self.name} ({self.code})"
+
+
 class Role(models.TextChoices):
     SUPER_ADMIN = "SUPER_ADMIN", "Super Admin"
     ADMIN = "ADMIN", "Admin"
@@ -24,6 +37,14 @@ class User(AbstractUser):
         max_length=20,
         choices=Role.choices,
         default=Role.CUSTOMER,
+    )
+    prison = models.ForeignKey(
+        Prison,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="users",
+        help_text="Prison for staff/prisoners; for customers, the prison they have joined to message.",
     )
     prisoner_number = models.CharField(
         max_length=10,
@@ -42,6 +63,10 @@ class User(AbstractUser):
                 raise ValidationError(
                     {"prisoner_number": "Prisoner number is only for users with role Prisoner."}
                 )
+        if self.role in (Role.PRISONER, Role.OFFICER, Role.ADMIN) and not self.prison_id:
+            raise ValidationError(
+                {"prison": "Prison is required for prisoners, officers, and admins."}
+            )
 
 
 class CustomerRecipient(models.Model):
@@ -71,6 +96,12 @@ class CustomerRecipient(models.Model):
 class Thread(models.Model):
     """One conversation between a customer and a prisoner (WhatsApp-style thread)."""
 
+    prison = models.ForeignKey(
+        Prison,
+        on_delete=models.PROTECT,
+        related_name="threads",
+        help_text="Prison of the prisoner; used to scope threads when customer changes prison.",
+    )
     customer = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -94,6 +125,7 @@ class Thread(models.Model):
             )
         ]
         indexes = [
+            models.Index(fields=["prison", "-updated_at"]),
             models.Index(fields=["customer", "prisoner"]),
             models.Index(fields=["-updated_at"]),
         ]
@@ -102,6 +134,12 @@ class Thread(models.Model):
     @classmethod
     def get_or_create_thread(cls, customer, prisoner):
         """Return the thread for this (customer, prisoner), creating it only if allowed."""
+        if not prisoner.prison_id:
+            raise ValidationError("Prisoner has no prison set.")
+        if customer.prison_id != prisoner.prison_id:
+            raise ValidationError(
+                "You can only message prisoners at the prison you have joined."
+            )
         if not CustomerRecipient.objects.filter(
             customer=customer, prisoner=prisoner
         ).exists():
@@ -111,7 +149,7 @@ class Thread(models.Model):
         thread, _ = cls.objects.get_or_create(
             customer=customer,
             prisoner=prisoner,
-            defaults={},
+            defaults={"prison_id": prisoner.prison_id},
         )
         return thread
 
@@ -134,6 +172,11 @@ class Message(models.Model):
     )
     body = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        help_text="When the receiver viewed the thread (read receipt).",
+    )
     inspected_at = models.DateTimeField(null=True, blank=True)
     inspected_by = models.ForeignKey(
         User,

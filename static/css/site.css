@@ -88,3 +88,385 @@
     margin: 0;
   }
 }
+
+/* Thread list: unread count badge */
+.unread-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.25rem;
+  padding: 0 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--pico-background-color);
+  background: var(--pico-primary-background);
+  border-radius: 999px;
+  margin-left: 0.25rem;
+}
+
+/* Message list: read receipt (WhatsApp-style) */
+.message-row header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.read-status {
+  margin-left: auto;
+  font-size: 0.875rem;
+  color: var(--pico-muted-color);
+}
+
+.read-status [title*="Read"] {
+  color: var(--pico-primary-background);
+}
+
+/* ========== Teams-style messages layout ========== */
+
+.messages-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 60vh;
+  margin-top: var(--pico-spacing);
+}
+
+@media (min-width: 768px) {
+  .messages-layout {
+    flex-direction: row;
+    align-items: stretch;
+    min-height: 70vh;
+  }
+}
+
+.messages-sidebar {
+  flex-shrink: 0;
+  width: 100%;
+  border-bottom: 1px solid var(--pico-muted-border-color);
+  overflow-y: auto;
+  max-height: 40vh;
+}
+
+@media (min-width: 768px) {
+  .messages-sidebar {
+    width: 300px;
+    min-width: 280px;
+    max-height: none;
+    border-bottom: none;
+    border-right: 1px solid var(--pico-muted-border-color);
+  }
+}
+
+@media (max-width: 767px) {
+  .messages-layout--thread-open .messages-sidebar {
+    display: none;
+  }
+
+  .messages-layout--thread-open .messages-pane {
+    width: 100%;
+  }
+}
+
+.messages-pane {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 50vh;
+}
+
+/* Conversation list (sidebar) */
+.conversation-list {
+  padding: var(--pico-spacing) 0;
+}
+
+.conversation-list__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--pico-muted-color);
+  margin: 0 1rem 0.5rem;
+  padding: 0;
+}
+
+.conversation-list__title--secondary {
+  margin-top: 1.5rem;
+}
+
+.conversation-list__threads {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.conversation-list__item {
+  margin: 0;
+}
+
+.conversation-list__link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  text-decoration: none;
+  color: var(--pico-color);
+  transition: background 0.15s ease;
+}
+
+.conversation-list__link:hover {
+  background: var(--pico-muted-background);
+}
+
+.conversation-list__item--active .conversation-list__link {
+  background: var(--pico-primary-background);
+  color: var(--pico-primary-inverse);
+  font-weight: 700;
+}
+
+.conversation-list__item--active .conversation-list__name,
+.conversation-list__item--active .conversation-list__preview,
+.conversation-list__item--active .conversation-list__time {
+  color: var(--pico-primary-inverse);
+  opacity: 1;
+}
+
+.conversation-list__avatar {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--pico-muted-background);
+  color: var(--pico-muted-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.conversation-list__item--active .conversation-list__avatar {
+  background: var(--pico-primary-inverse);
+  color: var(--pico-primary-background);
+}
+
+.conversation-list__meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.conversation-list__name {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.conversation-list__preview {
+  font-size: 0.8125rem;
+  color: var(--pico-muted-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.conversation-list__time {
+  font-size: 0.75rem;
+  color: var(--pico-muted-color);
+}
+
+.conversation-list__empty {
+  margin: 1rem;
+  color: var(--pico-muted-color);
+}
+
+.conversation-list__link .unread-badge {
+  flex-shrink: 0;
+}
+
+/* Empty state (no thread selected) */
+.messages-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 2rem;
+  text-align: center;
+}
+
+.messages-empty__text {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem;
+}
+
+.messages-empty__hint {
+  color: var(--pico-muted-color);
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+/* Thread pane (header + messages + composer) */
+.thread-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.thread-pane__header {
+  flex-shrink: 0;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--pico-muted-border-color);
+}
+
+.thread-pane__title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.thread-pane__messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 0;
+}
+
+.thread-pane__empty {
+  padding: 1rem;
+  color: var(--pico-muted-color);
+  margin: 0;
+}
+
+.thread-pane__composer {
+  flex-shrink: 0;
+  padding: 1rem;
+  border-top: 1px solid var(--pico-muted-border-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.thread-pane__composer label {
+  width: 100%;
+}
+
+.thread-pane__composer textarea {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 2.5rem;
+  width: 100%;
+  resize: none;
+  box-sizing: border-box;
+}
+
+.thread-pane__composer button {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+@media (min-width: 480px) {
+  .thread-pane__composer {
+    flex-wrap: nowrap;
+  }
+
+  .thread-pane__composer label {
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+  .thread-pane__composer textarea {
+    width: auto;
+    min-width: 8rem;
+  }
+
+  .thread-pane__composer button {
+    width: auto;
+  }
+}
+
+/* Message bubbles */
+.message-bubble-wrapper {
+  display: flex;
+  max-width: 85%;
+}
+
+.message-bubble-wrapper--sent {
+  align-self: flex-end;
+}
+
+.message-bubble-wrapper--received {
+  align-self: flex-start;
+}
+
+.message-bubble {
+  padding: 0.6rem 0.9rem;
+  border-radius: 1rem;
+  max-width: 100%;
+}
+
+.message-bubble--sent {
+  background: var(--pico-primary-background);
+  color: var(--pico-primary-inverse);
+  border-bottom-right-radius: 0.25rem;
+}
+
+.message-bubble--received {
+  background: var(--pico-muted-background);
+  color: var(--pico-color);
+  border-bottom-left-radius: 0.25rem;
+}
+
+.message-bubble__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin-bottom: 0.2rem;
+}
+
+.message-bubble__sender {
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.message-bubble__time {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+.message-bubble__read-status {
+  margin-left: auto;
+  font-size: 0.75rem;
+  opacity: 0.9;
+}
+
+.message-bubble__body {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.9375rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

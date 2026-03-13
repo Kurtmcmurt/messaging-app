@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="messages-layout {% if current_thread %}messages-layout--thread-open{% endif %}">
+  <aside class="messages-sidebar" aria-label="Conversations">
+    {% include "dashboard/partials/conversation_list.html" with threads=threads start_with=start_with current_thread=current_thread %}
+  </aside>
+  <div class="messages-pane">
+    {% block messages_content %}{% endblock %}
+  </div>
+</div>
+{% endblock %}

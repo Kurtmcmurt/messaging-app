@@ -1,0 +1,74 @@
+{% load static %}
+<div class="conversation-list">
+  <h2 class="conversation-list__title">Conversations</h2>
+  {% if threads %}
+  <ul class="conversation-list__threads" role="list">
+    {% for thread in threads %}
+      {% if user == thread.customer %}
+        {% with other=thread.prisoner %}
+        <li class="conversation-list__item {% if current_thread and current_thread.id == thread.id %}conversation-list__item--active{% endif %}">
+          <a href="{% url 'dashboard:thread_detail' thread.pk %}" class="conversation-list__link">
+            <span class="conversation-list__avatar" aria-hidden="true">{% if other.first_name or other.last_name %}{{ other.first_name|slice:":1" }}{{ other.last_name|slice:":1" }}{% else %}{{ other.username|slice:":2" }}{% endif %}</span>
+            <span class="conversation-list__meta">
+              <span class="conversation-list__name">{{ other.get_full_name|default:other.username }}</span>
+              <span class="conversation-list__preview">{% if thread.last_message_body %}{{ thread.last_message_body|truncatechars:45 }}{% else %}No messages yet{% endif %}</span>
+              <span class="conversation-list__time">{% if thread.last_message_at %}{{ thread.last_message_at|date:"M j, g:i A" }}{% endif %}</span>
+            </span>
+            {% if thread.unread_count %}<span class="unread-badge" aria-label="{{ thread.unread_count }} unread">{{ thread.unread_count }}</span>{% endif %}
+          </a>
+        </li>
+        {% endwith %}
+      {% else %}
+        {% with other=thread.customer %}
+        <li class="conversation-list__item {% if current_thread and current_thread.id == thread.id %}conversation-list__item--active{% endif %}">
+          <a href="{% url 'dashboard:thread_detail' thread.pk %}" class="conversation-list__link">
+            <span class="conversation-list__avatar" aria-hidden="true">{% if other.first_name or other.last_name %}{{ other.first_name|slice:":1" }}{{ other.last_name|slice:":1" }}{% else %}{{ other.username|slice:":2" }}{% endif %}</span>
+            <span class="conversation-list__meta">
+              <span class="conversation-list__name">{{ other.get_full_name|default:other.username }}</span>
+              <span class="conversation-list__preview">{% if thread.last_message_body %}{{ thread.last_message_body|truncatechars:45 }}{% else %}No messages yet{% endif %}</span>
+              <span class="conversation-list__time">{% if thread.last_message_at %}{{ thread.last_message_at|date:"M j, g:i A" }}{% endif %}</span>
+            </span>
+            {% if thread.unread_count %}<span class="unread-badge" aria-label="{{ thread.unread_count }} unread">{{ thread.unread_count }}</span>{% endif %}
+          </a>
+        </li>
+        {% endwith %}
+      {% endif %}
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="conversation-list__empty">No conversations yet.</p>
+  {% endif %}
+
+  {% if start_with %}
+  <h2 class="conversation-list__title conversation-list__title--secondary">Start a conversation</h2>
+  <ul class="conversation-list__threads" role="list">
+    {% for rec in start_with %}
+      {% if user.role == 'CUSTOMER' %}
+        {% with other=rec.prisoner %}
+        <li class="conversation-list__item">
+          <a href="{% url 'dashboard:thread_start' other.pk %}" class="conversation-list__link">
+            <span class="conversation-list__avatar" aria-hidden="true">{% if other.first_name or other.last_name %}{{ other.first_name|slice:":1" }}{{ other.last_name|slice:":1" }}{% else %}{{ other.username|slice:":2" }}{% endif %}</span>
+            <span class="conversation-list__meta">
+              <span class="conversation-list__name">{{ other.get_full_name|default:other.username }}{% if other.prisoner_number %} ({{ other.prisoner_number }}){% endif %}</span>
+              <span class="conversation-list__preview">Start conversation</span>
+            </span>
+          </a>
+        </li>
+        {% endwith %}
+      {% else %}
+        {% with other=rec.customer %}
+        <li class="conversation-list__item">
+          <a href="{% url 'dashboard:thread_start' other.pk %}" class="conversation-list__link">
+            <span class="conversation-list__avatar" aria-hidden="true">{% if other.first_name or other.last_name %}{{ other.first_name|slice:":1" }}{{ other.last_name|slice:":1" }}{% else %}{{ other.username|slice:":2" }}{% endif %}</span>
+            <span class="conversation-list__meta">
+              <span class="conversation-list__name">{{ other.get_full_name|default:other.username }}</span>
+              <span class="conversation-list__preview">Start conversation</span>
+            </span>
+          </a>
+        </li>
+        {% endwith %}
+      {% endif %}
+    {% endfor %}
+  </ul>
+  {% endif %}
+</div>

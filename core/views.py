@@ -1,10 +1,11 @@
 from django.contrib.auth import authenticate, login
+from django.db.models import Count, OuterRef, Q, Subquery
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-from .decorators import messaging_dashboard_required, staff_dashboard_required
-from .models import CustomerRecipient, Message, Role, Thread, User
+from .decorators import customer_prison_required, messaging_dashboard_required, staff_dashboard_required
+from .models import CustomerRecipient, Message, Prison, Role, Thread, User
 
 
 def home(request):
@@ -40,6 +41,8 @@ def login_view(request):
 def _redirect_after_login(user):
     if user.role in (Role.OFFICER, Role.ADMIN, Role.SUPER_ADMIN):
         return redirect("dashboard:vetting")
+    if user.role == Role.CUSTOMER and not user.prison_id:
+        return redirect("dashboard:profile")
     if user.role in (Role.CUSTOMER, Role.PRISONER):
         return redirect("dashboard:messages")
     return redirect("dashboard:vetting")
@@ -51,12 +54,57 @@ def dashboard_redirect(request):
     return _redirect_after_login(request.user)
 
 
+@messaging_dashboard_required
+@require_http_methods(["GET", "POST"])
+def profile(request):
+    """Profile page. Shows all user info; editable fields for non-prisoners (name, email, and prison for customers)."""
+    user = request.user
+    if request.method == "POST":
+        if user.role == Role.PRISONER:
+            from django.http import HttpResponseForbidden
+            return HttpResponseForbidden("Prisoner profiles are not editable.")
+        update_fields = []
+        first_name = (request.POST.get("first_name") or "").strip()
+        last_name = (request.POST.get("last_name") or "").strip()
+        email = (request.POST.get("email") or "").strip()
+        if user.first_name != first_name:
+            user.first_name = first_name
+            update_fields.append("first_name")
+        if user.last_name != last_name:
+            user.last_name = last_name
+            update_fields.append("last_name")
+        if user.email != email:
+            user.email = email
+            update_fields.append("email")
+        if user.role == Role.CUSTOMER:
+            prison_id = request.POST.get("prison")
+            if prison_id:
+                new_id = int(prison_id)
+                if user.prison_id != new_id:
+                    prison = get_object_or_404(Prison, pk=prison_id)
+                    user.prison = prison
+                    update_fields.append("prison_id")
+        if update_fields:
+            user.save(update_fields=update_fields)
+        if user.role == Role.CUSTOMER and "prison_id" in update_fields:
+            return redirect("dashboard:messages")
+        return redirect("dashboard:profile")
+    prisons = Prison.objects.order_by("name") if user.role == Role.CUSTOMER else None
+    return render(
+        request,
+        "dashboard/profile.html",
+        {"prisons": prisons},
+    )
+
+
 @staff_dashboard_required
 @require_GET
 def vetting_list(request):
     qs = Message.objects.select_related(
-        "thread", "sender", "receiver", "inspected_by"
+        "thread", "thread__prison", "sender", "receiver", "inspected_by"
     ).order_by("-created_at")
+    if request.user.role != Role.SUPER_ADMIN and request.user.prison_id:
+        qs = qs.filter(thread__prison_id=request.user.prison_id)
     if request.GET.get("uninspected") == "1":
         qs = qs.filter(inspected_at__isnull=True)
     return render(request, "dashboard/vetting.html", {"message_list": qs})
@@ -66,54 +114,105 @@ def vetting_list(request):
 @require_POST
 def message_inspect(request, pk):
     message = get_object_or_404(Message, pk=pk)
+    if request.user.role != Role.SUPER_ADMIN and request.user.prison_id:
+        if message.thread.prison_id != request.user.prison_id:
+            from django.http import HttpResponseForbidden
+            return HttpResponseForbidden("Access denied.")
     message.inspected_at = timezone.now()
     message.inspected_by = request.user
     message.save(update_fields=["inspected_at", "inspected_by"])
     return render(request, "dashboard/partials/message_row.html", {"message": message})
 
 
-@messaging_dashboard_required
-@require_GET
-def thread_list(request):
+def _get_messages_sidebar_data(request):
+    """Return (threads, start_with) for the messages sidebar. Threads include last_message_body, last_message_at, unread_count."""
+    latest_message = Message.objects.filter(thread=OuterRef("pk")).order_by("-created_at")
+    unread_filter = Q(messages__receiver=request.user, messages__read_at__isnull=True)
+    threads_base = Thread.objects.annotate(
+        unread_count=Count("messages", filter=unread_filter),
+        last_message_body=Subquery(latest_message.values("body")[:1]),
+        last_message_at=Subquery(latest_message.values("created_at")[:1]),
+    )
     if request.user.role == Role.CUSTOMER:
-        threads = Thread.objects.filter(customer=request.user).order_by("-updated_at")
-        allowed = CustomerRecipient.objects.filter(customer=request.user).select_related("prisoner")
+        threads = (
+            threads_base.filter(customer=request.user, prison=request.user.prison)
+            .select_related("customer", "prisoner", "prison")
+            .order_by("-updated_at")
+        )
+        allowed = CustomerRecipient.objects.filter(
+            customer=request.user, prisoner__prison=request.user.prison
+        ).select_related("prisoner")
         prisoner_ids_with_thread = set(threads.values_list("prisoner_id", flat=True))
         start_with = [r for r in allowed if r.prisoner_id not in prisoner_ids_with_thread]
     else:
-        threads = Thread.objects.filter(prisoner=request.user).order_by("-updated_at")
+        threads = (
+            threads_base.filter(prisoner=request.user)
+            .select_related("customer", "prisoner", "prison")
+            .order_by("-updated_at")
+        )
         allowed = CustomerRecipient.objects.filter(prisoner=request.user).select_related("customer")
         customer_ids_with_thread = set(threads.values_list("customer_id", flat=True))
         start_with = [r for r in allowed if r.customer_id not in customer_ids_with_thread]
-    return render(
-        request,
-        "dashboard/messages.html",
-        {"threads": threads, "start_with": start_with},
-    )
+    return threads, start_with
 
 
 @messaging_dashboard_required
+@customer_prison_required
+@require_GET
+def thread_list(request):
+    threads, start_with = _get_messages_sidebar_data(request)
+    return render(
+        request,
+        "dashboard/messages.html",
+        {"threads": threads, "start_with": start_with, "current_thread": None},
+    )
+
+
+def _mark_thread_messages_read(thread, user):
+    """Mark all messages in thread where user is the receiver as read."""
+    Message.objects.filter(
+        thread=thread, receiver=user, read_at__isnull=True
+    ).update(read_at=timezone.now())
+
+
+@messaging_dashboard_required
+@customer_prison_required
 @require_GET
 def thread_detail(request, pk):
     thread = get_object_or_404(Thread, pk=pk)
     if request.user not in (thread.customer, thread.prisoner):
         from django.http import HttpResponseForbidden
         return HttpResponseForbidden("Access denied.")
+    if request.user.role == Role.CUSTOMER and thread.prison_id != request.user.prison_id:
+        return redirect("dashboard:profile")
+    _mark_thread_messages_read(thread, request.user)
     messages = thread.messages.select_related("sender", "receiver").order_by("created_at")
+    threads, start_with = _get_messages_sidebar_data(request)
     return render(
         request,
         "dashboard/thread_detail.html",
-        {"thread": thread, "messages": messages},
+        {
+            "thread": thread,
+            "messages": messages,
+            "threads": threads,
+            "start_with": start_with,
+            "current_thread": thread,
+        },
     )
 
 
 @messaging_dashboard_required
+@customer_prison_required
 @require_POST
 def thread_send(request, pk):
     thread = get_object_or_404(Thread, pk=pk)
     if request.user not in (thread.customer, thread.prisoner):
         from django.http import HttpResponseForbidden
         return HttpResponseForbidden("Access denied.")
+    if request.user.role == Role.CUSTOMER and thread.prison_id != request.user.prison_id:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden("This conversation is for a different prison. Change your prison in profile to continue.")
+    _mark_thread_messages_read(thread, request.user)
     receiver = thread.prisoner if request.user == thread.customer else thread.customer
     body = (request.POST.get("body") or "").strip()
     if body:
@@ -128,6 +227,7 @@ def thread_send(request, pk):
 
 
 @messaging_dashboard_required
+@customer_prison_required
 @require_GET
 def thread_start(request, user_pk):
     """Start or open a thread with the given user (user_pk = prisoner for customer, customer for prisoner)."""
@@ -136,6 +236,9 @@ def thread_start(request, user_pk):
         if other_user.role != Role.PRISONER:
             from django.http import HttpResponseForbidden
             return HttpResponseForbidden("Invalid recipient.")
+        if other_user.prison_id != request.user.prison_id:
+            from django.http import HttpResponseForbidden
+            return HttpResponseForbidden("That prisoner is at a different prison.")
         if not CustomerRecipient.objects.filter(customer=request.user, prisoner=other_user).exists():
             from django.http import HttpResponseForbidden
             return HttpResponseForbidden("Not allowed.")
@@ -151,11 +254,11 @@ def thread_start(request, user_pk):
     return redirect("dashboard:thread_detail", pk=thread.pk)
 
 
+@messaging_dashboard_required
+@customer_prison_required
 @require_http_methods(["GET", "POST"])
 def add_recipient(request):
-    """Customers can add a recipient by prisoner number."""
-    if not request.user.is_authenticated:
-        return redirect("login")
+    """Customers can add a recipient by prisoner number (scoped to their prison)."""
     if request.user.role != Role.CUSTOMER:
         from django.http import HttpResponseForbidden
         return HttpResponseForbidden("Only customers can add recipients.")
@@ -168,9 +271,10 @@ def add_recipient(request):
             prisoner = User.objects.filter(
                 role=Role.PRISONER,
                 prisoner_number=raw,
+                prison=request.user.prison,
             ).first()
             if not prisoner:
-                error = "No prisoner found with that number."
+                error = "No prisoner found with that number at your selected prison."
             elif CustomerRecipient.objects.filter(
                 customer=request.user,
                 prisoner=prisoner,
@@ -187,11 +291,16 @@ def add_recipient(request):
 
 
 @messaging_dashboard_required
+@customer_prison_required
 @require_GET
 def thread_messages_partial(request, pk):
     thread = get_object_or_404(Thread, pk=pk)
     if request.user not in (thread.customer, thread.prisoner):
         from django.http import HttpResponseForbidden
         return HttpResponseForbidden("Access denied.")
+    if request.user.role == Role.CUSTOMER and thread.prison_id != request.user.prison_id:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden("Access denied.")
+    _mark_thread_messages_read(thread, request.user)
     messages = thread.messages.select_related("sender", "receiver").order_by("created_at")
     return render(request, "dashboard/partials/message_list.html", {"messages": messages})

@@ -2,21 +2,29 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils import timezone
 
-from .models import CustomerRecipient, Message, Thread, User
+from .models import CustomerRecipient, Message, Prison, Thread, User
 from .models import Role
+
+
+@admin.register(Prison)
+class PrisonAdmin(admin.ModelAdmin):
+    list_display = ("name", "code")
+    search_fields = ("name", "code")
 
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ("username", "email", "role", "prisoner_number", "is_staff", "is_active")
-    list_filter = ("role", "is_staff", "is_active")
+    list_display = ("username", "email", "role", "prison", "prisoner_number", "is_staff", "is_active")
+    list_filter = ("role", "prison", "is_staff", "is_active")
     ordering = ("username",)
     fieldsets = BaseUserAdmin.fieldsets + (
         ("Role", {"fields": ("role",)}),
+        ("Prison", {"fields": ("prison",), "description": "Required for prisoners, officers, admins. For customers, the prison they have joined."}),
         ("Prisoner", {"fields": ("prisoner_number",), "description": "Prisoner number (UK MoJ format). Only for prisoners."}),
     )
     add_fieldsets = BaseUserAdmin.add_fieldsets + (
         ("Role", {"fields": ("role",)}),
+        ("Prison", {"fields": ("prison",)}),
         ("Prisoner", {"fields": ("prisoner_number",)}),
     )
 
@@ -40,8 +48,8 @@ class MessageInline(admin.TabularInline):
 
 @admin.register(Thread)
 class ThreadAdmin(admin.ModelAdmin):
-    list_display = ("id", "customer", "prisoner", "updated_at", "created_at")
-    list_filter = ("customer", "prisoner")
+    list_display = ("id", "prison", "customer", "prisoner", "updated_at", "created_at")
+    list_filter = ("prison", "customer", "prisoner")
     search_fields = ("customer__username", "prisoner__username")
     ordering = ("-updated_at",)
     autocomplete_fields = ("customer", "prisoner")
@@ -57,14 +65,15 @@ class MessageAdmin(admin.ModelAdmin):
         "receiver",
         "body_preview",
         "created_at",
+        "read_at",
         "inspected_at",
         "inspected_by",
     )
-    list_filter = ("thread", "inspected_at", "created_at")
+    list_filter = ("thread", "read_at", "inspected_at", "created_at")
     search_fields = ("body", "sender__username", "receiver__username")
     ordering = ("-created_at",)
     autocomplete_fields = ("thread", "sender", "receiver", "inspected_by")
-    readonly_fields = ("created_at",)
+    readonly_fields = ("created_at", "read_at")
     actions = ["mark_as_inspected"]
 
     @admin.display(description="Body")

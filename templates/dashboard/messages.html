@@ -1,47 +1,8 @@
-{% extends "base.html" %}
+{% extends "dashboard/messages_base.html" %}
 {% block title %}Messages – Messaging{% endblock %}
-{% block content %}
-<article>
-  <header>
-    <h1>Your conversations</h1>
-  </header>
-  {% if threads %}
-  <ul>
-    {% for thread in threads %}
-      <li>
-        <a href="{% url 'dashboard:thread_detail' thread.pk %}">
-          {% if user == thread.customer %}
-            {{ thread.prisoner.get_full_name|default:thread.prisoner.username }}
-          {% else %}
-            {{ thread.customer.get_full_name|default:thread.customer.username }}
-          {% endif %}
-          — {{ thread.updated_at|date:"SHORT_DATETIME_FORMAT" }}
-        </a>
-      </li>
-    {% endfor %}
-  </ul>
-  {% else %}
-  <p>No conversations yet.</p>
-  {% endif %}
-
-  {% if start_with %}
-  <h2>Start a conversation</h2>
-  <ul>
-    {% for rec in start_with %}
-      <li>
-        {% if user.role == 'CUSTOMER' %}
-          <a href="{% url 'dashboard:thread_start' rec.prisoner.pk %}">
-            {{ rec.prisoner.get_full_name|default:rec.prisoner.username }}
-            {% if rec.prisoner.prisoner_number %}({{ rec.prisoner.prisoner_number }}){% endif %}
-          </a>
-        {% else %}
-          <a href="{% url 'dashboard:thread_start' rec.customer.pk %}">
-            {{ rec.customer.get_full_name|default:rec.customer.username }}
-          </a>
-        {% endif %}
-      </li>
-    {% endfor %}
-  </ul>
-  {% endif %}
-</article>
+{% block messages_content %}
+<div class="messages-empty">
+  <p class="messages-empty__text">Select a conversation</p>
+  <p class="messages-empty__hint">Choose a conversation from the list or start a new one.</p>
+</div>
 {% endblock %}
